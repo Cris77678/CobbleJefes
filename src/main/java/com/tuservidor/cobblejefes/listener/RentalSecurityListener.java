@@ -6,8 +6,8 @@ import kotlin.Unit;
 
 /**
  * Seguridad para Pokémon de alquiler (compatible con el sistema de exportación de BattleFrontier).
- * Aunque PokeFrontier no usa equipos alquilados, mantiene esta protección para
- * coexistir con BattleFrontier en el mismo servidor.
+ * Aunque CobbleJefes no usa equipos alquilados nativamente, mantiene esta protección para
+ * coexistir pacíficamente con BattleFrontier en el mismo servidor sin conflictos.
  */
 public class RentalSecurityListener {
 
