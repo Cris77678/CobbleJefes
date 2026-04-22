@@ -2,7 +2,7 @@ package com.tuservidor.cobblejefes.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.tuservidor.cobblejefes.PokeFrontier;
+import com.tuservidor.cobblejefes.CobbleJefes;
 import lombok.Data;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,7 +36,7 @@ public class AssaultConfig {
     );
 
     /** Mensajes globales del sistema */
-    private String prefix = "&7[&cPoke&4Frontier&7] ";
+    private String prefix = "&7[&cCobble&4Jefes&7] ";
     private String msgAlreadyInSession    = "%prefix% &cYa tienes una sesión activa. Usa /assault leave para salir.";
     private String msgBaseNotFound        = "%prefix% &cBase no encontrada: &e%base%";
     private String msgBaseComplete        = "%prefix% &aYa completaste esta base. Usa /assault reset %base% para reiniciarla.";
@@ -58,7 +58,7 @@ public class AssaultConfig {
     private String msgNoSession           = "%prefix% &cNo estás participando en ningún asalto.";
     private String msgReconnectProgress   = "%prefix% &e¡Bienvenido de vuelta! Tienes progreso guardado en: &6%bases%";
 
-    /** Mapa de mega-stones para NPC (igual que en FrontierConfig) */
+    /** Mapa de mega-stones para NPC */
     private Map<String, String> npcMegaStones = new LinkedHashMap<>();
 
     /** Offset Y al spawnear NPCs */
@@ -108,7 +108,7 @@ public class AssaultConfig {
             // Guardar siempre para generar campos nuevos
             Files.writeString(p, gson.toJson(INSTANCE));
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error cargando assault_config.json. Usando defaults.", e);
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error cargando assault_config.json. Usando defaults.", e);
             INSTANCE = defaultConfig();
         }
     }
@@ -118,7 +118,7 @@ public class AssaultConfig {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             Files.writeString(Path.of(PATH), gson.toJson(this));
         } catch (IOException e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error guardando assault_config.json", e);
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error guardando assault_config.json", e);
         }
     }
 
