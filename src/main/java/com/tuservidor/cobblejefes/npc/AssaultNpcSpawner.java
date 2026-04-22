@@ -63,13 +63,25 @@ public class AssaultNpcSpawner {
             npc.addTag("pf_trainer=" + trainerId);
             if (base != null) npc.addTag("pf_base=" + base.getId());
 
-            npc.moveTo(pos.x, pos.y + cfg.getNpcYOffset(), pos.z, yaw, 0);
-            npc.setYHeadRot(yaw);
-
             NPCPartyStore party = new NPCPartyStore(npc);
             loadTeamFromYaml(party, trainerId);
+            
+            // FIX CRÍTICO: Prevenir Server Crash si el YAML no tenía Pokémon
+            boolean hasValidPokemon = false;
+            for (Pokemon p : party) {
+                if (p != null) { hasValidPokemon = true; break; }
+            }
+            if (!hasValidPokemon) {
+                CobbleJefes.LOGGER.error("[CobbleJefes] El entrenador {} no tiene Pokémon válidos en su YAML. Abortando spawn.", trainerId);
+                npc.discard();
+                return null;
+            }
+
             party.initialize();
             npc.setParty(party);
+
+            npc.moveTo(pos.x, pos.y + cfg.getNpcYOffset(), pos.z, yaw, 0);
+            npc.setYHeadRot(yaw);
 
             if (level.addFreshEntity(npc)) {
                 FrontierGlow.applyNpcGlow(npc, level);
@@ -97,7 +109,6 @@ public class AssaultNpcSpawner {
     }
 
     private static void loadTeamFromYaml(NPCPartyStore party, String trainerId) {
-        // FIX: Buscar en cobblejefes primero, pero permitir retrocompatibilidad
         Path cjPath = Path.of("config/cobblejefes/trainers/" + trainerId + ".yml");
         Path pfPath = Path.of("config/pokefrontier/trainers/" + trainerId + ".yml");
         Path bfPath = Path.of("config/battlefrontier/trainers/" + trainerId + ".yml");

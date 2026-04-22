@@ -40,34 +40,34 @@ public class ExportCommand {
         exportBase.executes(ctx -> openGui(ctx.getSource()));
         dispatcher.register(exportBase);
 
-        var bfset = Commands.literal("bfset").requires(src -> src.hasPermission(2));
+        // FIX: Cambiado de bfset a cjset
+        var cjset = Commands.literal("cjset").requires(src -> src.hasPermission(2));
 
-        bfset.then(Commands.literal("id").then(Commands.argument("value", StringArgumentType.word())
+        cjset.then(Commands.literal("id").then(Commands.argument("value", StringArgumentType.word())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setTrainerId(StringArgumentType.getString(ctx, "value").toLowerCase()), "ID", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("name").then(Commands.argument("value", StringArgumentType.greedyString())
+        cjset.then(Commands.literal("name").then(Commands.argument("value", StringArgumentType.greedyString())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setTrainerName(StringArgumentType.getString(ctx, "value")), "Nombre", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("battle").then(Commands.argument("value", StringArgumentType.greedyString())
+        cjset.then(Commands.literal("battle").then(Commands.argument("value", StringArgumentType.greedyString())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setBattleDialogue(StringArgumentType.getString(ctx, "value")), "Diálogo de batalla", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("defeat").then(Commands.argument("value", StringArgumentType.greedyString())
+        cjset.then(Commands.literal("defeat").then(Commands.argument("value", StringArgumentType.greedyString())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setDefeatDialogue(StringArgumentType.getString(ctx, "value")), "Diálogo de derrota", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("skin").then(Commands.argument("value", StringArgumentType.word())
+        cjset.then(Commands.literal("skin").then(Commands.argument("value", StringArgumentType.word())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setSkin(StringArgumentType.getString(ctx, "value")), "Skin", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("cooldown").then(Commands.argument("hours", DoubleArgumentType.doubleArg(0, 720))
+        cjset.then(Commands.literal("cooldown").then(Commands.argument("hours", DoubleArgumentType.doubleArg(0, 720))
                 .executes(ctx -> setField(ctx.getSource(), d -> d.setCooldownHours(DoubleArgumentType.getDouble(ctx, "hours")), "Cooldown", DoubleArgumentType.getDouble(ctx, "hours") + "h"))));
 
-        bfset.then(Commands.literal("rewardcmd").then(Commands.argument("cmd", StringArgumentType.greedyString())
+        cjset.then(Commands.literal("rewardcmd").then(Commands.argument("cmd", StringArgumentType.greedyString())
                 .executes(ctx -> setField(ctx.getSource(), d -> d.getRewards().getCommands().add(StringArgumentType.getString(ctx, "cmd")), "Comando añadido", StringArgumentType.getString(ctx, "cmd")))));
 
-        // FIX: Nuevo comando para poder borrar si el jugador se equivoca tipeando las recompensas
-        bfset.then(Commands.literal("rewardclear").executes(ctx -> setField(ctx.getSource(), 
+        cjset.then(Commands.literal("rewardclear").executes(ctx -> setField(ctx.getSource(), 
                 d -> d.getRewards().getCommands().clear(), "Comandos de recompensa", "Limpiados")));
 
-        dispatcher.register(bfset);
+        dispatcher.register(cjset);
     }
 
     private static int openGui(CommandSourceStack src) {

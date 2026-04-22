@@ -15,15 +15,15 @@ public class AssaultBattleListener {
 
     public static void register() {
 
-        // Victoria del jugador (o del NPC — se diferencia por quién ganó)
         CobblemonEvents.BATTLE_VICTORY.subscribe(
             com.cobblemon.mod.common.api.Priority.NORMAL, event -> {
+                // FIX CRÍTICO: Debemos notificar tanto si el jugador ganó como si perdió (sus Pokémon se debilitaron)
                 handleResult(event.getBattle(), event.getWinners(), true);
+                handleResult(event.getBattle(), event.getLosers(), false);
                 return Unit.INSTANCE;
             }
         );
 
-        // Huida del jugador → derrota para el sistema de asalto
         CobblemonEvents.BATTLE_FLED.subscribe(
             com.cobblemon.mod.common.api.Priority.NORMAL, event -> {
                 handleResult(event.getBattle(), event.getFleeing(), false);
@@ -35,10 +35,11 @@ public class AssaultBattleListener {
     private static void handleResult(PokemonBattle battle,
                                       List<BattleActor> actorsToCheck,
                                       boolean isWin) {
+        if (actorsToCheck == null) return;
+        
         for (BattleActor actor : actorsToCheck) {
             actor.getPlayerUUIDs().forEach(playerUuid -> {
-                ServerPlayer player = battle.getServer()
-                    .getPlayerList().getPlayer(playerUuid);
+                ServerPlayer player = battle.getServer().getPlayerList().getPlayer(playerUuid);
 
                 if (player == null) return;
                 if (!AssaultSession.has(playerUuid)) return;
@@ -46,7 +47,6 @@ public class AssaultBattleListener {
                 AssaultSession session = AssaultSession.get(playerUuid);
                 if (session.getState() != AssaultSession.State.IN_BATTLE) return;
 
-                // Validar que el combate es exactamente contra el NPC de la sesión
                 if (!isFightingAssaultNpc(battle, actor, session)) return;
 
                 AssaultManager.handleBattleEnd(player, isWin);

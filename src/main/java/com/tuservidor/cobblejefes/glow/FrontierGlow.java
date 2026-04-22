@@ -3,7 +3,7 @@ package com.tuservidor.cobblejefes.glow;
 import com.cobblemon.mod.common.api.Priority;
 import com.cobblemon.mod.common.api.events.CobblemonEvents;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
-import com.tuservidor.cobblejefes.PokeFrontier;
+import com.tuservidor.cobblejefes.CobbleJefes;
 import kotlin.Unit;
 import net.minecraft.ChatFormatting;
 import net.minecraft.server.MinecraftServer;
@@ -22,7 +22,7 @@ public class FrontierGlow {
     private static final int INFINITE = Integer.MAX_VALUE;
 
     public static void ensureTeams(MinecraftServer server) {
-        PokeFrontier.LOGGER.info("[PokeFrontier] Sistema de auras listo.");
+        CobbleJefes.LOGGER.info("[CobbleJefes] Sistema de auras listo.");
     }
 
     public static void register() {
@@ -52,7 +52,7 @@ public class FrontierGlow {
             living.removeEffect(MobEffects.GLOWING);
             entity.setGlowingTag(false);
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] removeGlow error: {}", e.getMessage());
+            CobbleJefes.LOGGER.error("[CobbleJefes] removeGlow error: {}", e.getMessage());
         }
     }
 
@@ -76,7 +76,7 @@ public class FrontierGlow {
             scoreboard.addPlayerToTeam(entry, team);
             entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, INFINITE, 0, false, false, false));
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] applyGlow error: {}", e.getMessage());
+            CobbleJefes.LOGGER.error("[CobbleJefes] applyGlow error: {}", e.getMessage());
         }
     }
 }

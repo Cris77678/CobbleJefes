@@ -18,30 +18,32 @@ public abstract class CommandBlockerMixin {
     @Shadow public ServerPlayer player;
 
     @Inject(method = "handleChatCommand", at = @At("HEAD"), cancellable = true)
-    private void pokefrontier$blockCommands(ServerboundChatCommandPacket packet, CallbackInfo ci) {
+    private void cobblejefes$blockCommands(ServerboundChatCommandPacket packet, CallbackInfo ci) {
         if (!AssaultSession.has(player.getUUID())) return;
 
-        String command = packet.command().toLowerCase();
+        String fullCommand = packet.command().toLowerCase();
+        
+        String baseCommand = fullCommand.split(" ")[0];
+        if (baseCommand.contains(":")) {
+            baseCommand = baseCommand.split(":")[1];
+        }
 
-        // Permitir comandos de PokeFrontier
-        if (command.startsWith("assault leave")
-                || command.startsWith("assault status")
-                || command.startsWith("assault check")) {
+        if (fullCommand.startsWith("assault leave")
+                || fullCommand.startsWith("assault status")
+                || fullCommand.startsWith("assault check")) {
             return;
         }
 
-        // Comandos peligrosos durante el asalto
+        // FIX: Usar startsWith para tapar variaciones (tpa, tpaccept, homes, warps)
         boolean blocked =
-            command.startsWith("pc")         ||
-            command.startsWith("pokeheal")   ||
-            command.startsWith("trade")      ||
-            command.startsWith("tpa")        ||
-            command.startsWith("home")       ||
-            command.startsWith("spawn")      ||
-            command.startsWith("warp")       ||
-            command.startsWith("back")       ||
-            command.startsWith("tp ")        ||
-            command.startsWith("teleport");
+            baseCommand.equals("pc")         ||
+            baseCommand.equals("pokeheal")   ||
+            baseCommand.startsWith("trade")  ||
+            baseCommand.startsWith("tp")     ||
+            baseCommand.startsWith("home")   ||
+            baseCommand.startsWith("spawn")  ||
+            baseCommand.startsWith("warp")   ||
+            baseCommand.equals("back");
 
         if (blocked) {
             player.sendSystemMessage(Component.literal(

@@ -15,18 +15,15 @@ import java.util.*;
 @Data
 public class AssaultConfig {
 
-    private static final String PATH = "config/pokefrontier/assault_config.json";
+    // FIX: Ruta unificada al nuevo nombre del mod
+    private static final String PATH = "config/cobblejefes/assault_config.json";
     private static AssaultConfig INSTANCE;
 
     // ── Configuración global ──────────────────────────────────────────────────
 
-    /** Nivel máximo que los jugadores pueden alcanzar en el mundo abierto */
     private int maxPlayerLevel = 100;
-
-    /** Radio de distancia para el anti-grief en arenas activas */
     private double arenaProtectionRadius = 15.0;
 
-    /** Ítems de batalla que no se pueden usar durante un asalto */
     private List<String> bannedBattleItems = List.of(
         "cobblemon:x_attack", "cobblemon:x_defense", "cobblemon:x_speed",
         "cobblemon:x_sp_atk", "cobblemon:x_sp_def", "cobblemon:x_accuracy",
@@ -35,7 +32,6 @@ public class AssaultConfig {
         "cobblemon:full_heal"
     );
 
-    /** Mensajes globales del sistema */
     private String prefix = "&7[&cCobble&4Jefes&7] ";
     private String msgAlreadyInSession    = "%prefix% &cYa tienes una sesión activa. Usa /assault leave para salir.";
     private String msgBaseNotFound        = "%prefix% &cBase no encontrada: &e%base%";
@@ -58,10 +54,8 @@ public class AssaultConfig {
     private String msgNoSession           = "%prefix% &cNo estás participando en ningún asalto.";
     private String msgReconnectProgress   = "%prefix% &e¡Bienvenido de vuelta! Tienes progreso guardado en: &6%bases%";
 
-    /** Mapa de mega-stones para NPC */
     private Map<String, String> npcMegaStones = new LinkedHashMap<>();
 
-    /** Offset Y al spawnear NPCs */
     private double npcYOffset = 0.1;
     private float  defaultNpcYaw = 180f;
     private double npcSpawnDistance = 2.5;
@@ -105,7 +99,6 @@ public class AssaultConfig {
             } else {
                 INSTANCE = defaultConfig();
             }
-            // Guardar siempre para generar campos nuevos
             Files.writeString(p, gson.toJson(INSTANCE));
         } catch (Exception e) {
             CobbleJefes.LOGGER.error("[CobbleJefes] Error cargando assault_config.json. Usando defaults.", e);
@@ -126,80 +119,14 @@ public class AssaultConfig {
 
     private static AssaultConfig defaultConfig() {
         AssaultConfig cfg = new AssaultConfig();
-
-        // Base ejemplo: Team Rocket
         AssaultBase rocket = new AssaultBase();
         rocket.setId("base_rocket");
         rocket.setOrganization("Team Rocket");
         rocket.setDisplayColor("§c");
-        rocket.setSequence(Arrays.asList(
-            "rocket_grunt1",
-            "rocket_grunt2",
-            "rocket_grunt3",
-            "rocket_admin_archer",
-            "giovanni"
-        ));
-        rocket.setMinibossIndex(3);
-        rocket.setBossIndex(4);
-        rocket.setMinibossRewards(List.of(
-            "give {player} cobblemon:rare_candy 5"
-        ));
-        rocket.setBossRewards(List.of(
-            "give {player} cobblemon:master_ball 1",
-            "give {player} minecraft:diamond 10"
-        ));
-        rocket.setBannedPokemon(List.of("cobblemon:mewtwo"));
-        rocket.setBanLegendaries(false);
-
-        // Arena ejemplo para rocket
-        AssaultBase.Arena rocketArena = new AssaultBase.Arena();
-        rocketArena.setId("arena_rocket");
-        AssaultBase.LocationDef playerSpawn = new AssaultBase.LocationDef();
-        playerSpawn.setWorld("minecraft:overworld");
-        playerSpawn.setX(100); playerSpawn.setY(64); playerSpawn.setZ(200);
-        playerSpawn.setYaw(0); playerSpawn.setPitch(0);
-        rocketArena.setPlayerSpawn(playerSpawn);
-        AssaultBase.LocationDef npcSpawn = new AssaultBase.LocationDef();
-        npcSpawn.setWorld("minecraft:overworld");
-        npcSpawn.setX(100); npcSpawn.setY(64); npcSpawn.setZ(203);
-        npcSpawn.setYaw(180); npcSpawn.setPitch(0);
-        rocketArena.setNpcSpawn(npcSpawn);
-        rocket.setArena(rocketArena);
-
-        // Base ejemplo: Team Flare
-        AssaultBase flare = new AssaultBase();
-        flare.setId("base_flare");
-        flare.setOrganization("Team Flare");
-        flare.setDisplayColor("§6");
-        flare.setSequence(Arrays.asList(
-            "flare_scientist1",
-            "flare_scientist2",
-            "flare_admin_xerosic",
-            "lysandre"
-        ));
-        flare.setMinibossIndex(2);
-        flare.setBossIndex(3);
-        flare.setMinibossRewards(List.of("give {player} cobblemon:rare_candy 3"));
-        flare.setBossRewards(List.of("give {player} cobblemon:master_ball 1"));
-        flare.setBannedPokemon(List.of());
-        flare.setBanLegendaries(false);
-
-        AssaultBase.Arena flareArena = new AssaultBase.Arena();
-        flareArena.setId("arena_flare");
-        AssaultBase.LocationDef flarePlayer = new AssaultBase.LocationDef();
-        flarePlayer.setWorld("minecraft:overworld");
-        flarePlayer.setX(200); flarePlayer.setY(64); flarePlayer.setZ(200);
-        flarePlayer.setYaw(0); flarePlayer.setPitch(0);
-        flareArena.setPlayerSpawn(flarePlayer);
-        AssaultBase.LocationDef flareNpc = new AssaultBase.LocationDef();
-        flareNpc.setWorld("minecraft:overworld");
-        flareNpc.setX(200); flareNpc.setY(64); flareNpc.setZ(203);
-        flareNpc.setYaw(180); flareNpc.setPitch(0);
-        flareArena.setNpcSpawn(flareNpc);
-        flare.setArena(flareArena);
-
+        rocket.setSequence(Arrays.asList("rocket_grunt1", "rocket_admin_archer", "giovanni"));
+        rocket.setMinibossIndex(1);
+        rocket.setBossIndex(2);
         cfg.getBases().add(rocket);
-        cfg.getBases().add(flare);
         return cfg;
     }
 
@@ -210,30 +137,15 @@ public class AssaultConfig {
         private String id;
         private String organization = "Unknown Org";
         private String displayColor = "§f";
-
-        /** Secuencia fija de trainer_ids. Índice = paso (0-based). */
         private List<String> sequence = new ArrayList<>();
-
-        /** Índices especiales dentro de la secuencia (0-based) */
         private int minibossIndex = -1;
         private int bossIndex     = -1;
-
-        /** Comandos de recompensa al vencer al mini-jefe */
         private List<String> minibossRewards = new ArrayList<>();
-
-        /** Comandos de recompensa al vencer al jefe final */
         private List<String> bossRewards = new ArrayList<>();
-
-        /** Species IDs de Pokémon prohibidos (ej: "cobblemon:mewtwo") */
         private List<String> bannedPokemon = new ArrayList<>();
-
-        /** Si true, ningún legendario/mítico puede usarse en esta base */
         private boolean banLegendaries = false;
-
-        /** Arena con posiciones de spawn */
         private Arena arena;
 
-        // Utilidades
         public boolean isMiniboss(int step) { return step == minibossIndex; }
         public boolean isBoss(int step)     { return step == bossIndex; }
         public boolean isComplete(int step) { return step >= sequence.size(); }

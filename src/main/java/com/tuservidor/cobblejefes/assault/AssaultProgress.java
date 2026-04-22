@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AssaultProgress {
 
-    private static final String PATH     = "config/pokefrontier/data/assault_progress.json";
+    // FIX: Ruta unificada al nuevo nombre del mod
+    private static final String PATH     = "config/cobblejefes/data/assault_progress.json";
     private static final String PATH_TMP = PATH + ".tmp";
 
     private static Map<UUID, Map<String, Integer>> DATA = new ConcurrentHashMap<>();
@@ -63,7 +64,6 @@ public class AssaultProgress {
             );
             if (loaded != null) {
                 DATA = new ConcurrentHashMap<>();
-                // FIX: Copia profunda para asegurar Thread-Safety
                 for (Map.Entry<UUID, Map<String, Integer>> entry : loaded.entrySet()) {
                     DATA.put(entry.getKey(), new ConcurrentHashMap<>(entry.getValue()));
                 }

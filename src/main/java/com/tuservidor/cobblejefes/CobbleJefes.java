@@ -26,13 +26,11 @@ public class CobbleJefes implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("[PokeFrontier] Iniciando sistema de Asalto a Bases...");
+        LOGGER.info("[CobbleJefes] Iniciando sistema de Asalto a Bases...");
 
-        // Cargar configuración y progreso persistente
         AssaultConfig.reload();
         AssaultProgress.load();
 
-        // Registrar listeners
         AssaultBattleListener.register();
         AssaultSecurityListener.register();
         AssaultItemListener.register();
@@ -41,13 +39,11 @@ public class CobbleJefes implements ModInitializer {
         PlayerLevelCapListener.register();
         FrontierGlow.register();
 
-        // Registrar comandos
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             AssaultCommand.register(dispatcher);
             ExportCommand.register(dispatcher);
         });
 
-        // Lifecycle
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             SERVER = server;
             FrontierGlow.ensureTeams(server);
@@ -57,7 +53,7 @@ public class CobbleJefes implements ModInitializer {
             AssaultProgress.save();
         });
 
-        LOGGER.info("[PokeFrontier] Sistema de Asalto a Bases listo.");
+        LOGGER.info("[CobbleJefes] Sistema de Asalto a Bases listo.");
     }
 
     public static void runAsync(Runnable runnable) {

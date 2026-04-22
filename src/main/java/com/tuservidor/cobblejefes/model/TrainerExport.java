@@ -1,9 +1,14 @@
 package com.tuservidor.cobblejefes.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.util.List;
+import java.util.ArrayList;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TrainerExport {
     private String trainerId;
     private String trainerName;
@@ -11,33 +16,44 @@ public class TrainerExport {
     private String defeatDialogue;
     private double cooldownHours;
     private String skin;
-    private List<PokemonEntry> pokemonTeam;
-    private RewardEntry rewards;
+    private List<PokemonEntry> pokemonTeam = new ArrayList<>();
+    private RewardEntry rewards = new RewardEntry();
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PokemonEntry {
-        private final String species;
-        private final int    level;
-        private final String nature;
-        private final String ability;
-        private final String heldItem;
-        private final Ivs    ivs;
-        private final Evs    evs;
-        private final List<String> moves;
+        private String species;
+        private int    level;
+        private String nature;
+        private String ability;
+        private String heldItem;
+        private Ivs    ivs;
+        private Evs    evs;
+        private List<String> moves = new ArrayList<>();
     }
 
-    @Data public static class Ivs { private final int hp, atk, def, spa, spd, spe; }
-    @Data public static class Evs { private final int hp, atk, def, spa, spd, spe; }
+    @Data @NoArgsConstructor @AllArgsConstructor 
+    public static class Ivs { private int hp, atk, def, spa, spd, spe; }
+    
+    @Data @NoArgsConstructor @AllArgsConstructor 
+    public static class Evs { private int hp, atk, def, spa, spd, spe; }
 
     @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class RewardEntry {
-        private final List<ItemReward> items;
-        private final List<String>     commands;
+        // FIX: Evitamos variables final en los modelos anidados para asegurar la 
+        // correcta serialización/deserialización de bibliotecas externas.
+        private List<ItemReward> items = new ArrayList<>();
+        private List<String>     commands = new ArrayList<>();
 
         @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class ItemReward {
-            private final String item;
-            private final int    count;
+            private String item;
+            private int    count;
         }
     }
 }

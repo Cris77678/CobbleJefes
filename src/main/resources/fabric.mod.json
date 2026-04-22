@@ -3,15 +3,15 @@
   "id": "cobblejefes",
   "version": "${version}",
   "name": "CobbleJefes",
-  "description": "Sistema de Asalto a Bases Pokémon (Team Rocket, Team Flare, etc.) con progreso secuencial y persistente por jugador.",
+  "description": "Sistema de Asalto a Bases Pokémon con progreso secuencial y persistente.",
   "authors": ["TuServidor"],
   "license": "All-Rights-Reserved",
   "environment": "server",
   "entrypoints": {
-    "server": ["com.tuservidor.cobblejefes.PokeFrontier"]
+    "server": ["com.tuservidor.cobblejefes.CobbleJefes"]
   },
   "mixins": [
-    "pokefrontier.mixins.json"
+    "cobblejefes.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.10",

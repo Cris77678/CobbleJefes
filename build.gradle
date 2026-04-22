@@ -20,7 +20,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
-    modCompileOnly "com.cobblemon:fabric:${cobblemon_version}"
+    // FIX CRÍTICO: Cambiado de modCompileOnly a modImplementation para evitar crashes en el entorno de desarrollo
+    modImplementation "com.cobblemon:fabric:${cobblemon_version}"
 
     // CobblemonMegaShowdown (opcional — para mega-evolución de NPCs)
     modCompileOnly fileTree(dir: 'libs', include: ['CobblemonMegaShowdown*.jar'])

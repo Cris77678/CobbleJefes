@@ -40,11 +40,9 @@ public class AssaultCommand {
             .requires(src -> src.hasPermission(2))
             .then(Commands.argument("base_id", StringArgumentType.word())
                 .then(Commands.literal("player")
-                    .executes(ctx -> setArenaSpawn(ctx,
-                        StringArgumentType.getString(ctx, "base_id"), "player")))
+                    .executes(ctx -> setArenaSpawn(ctx, StringArgumentType.getString(ctx, "base_id"), "player")))
                 .then(Commands.literal("npc")
-                    .executes(ctx -> setArenaSpawn(ctx,
-                        StringArgumentType.getString(ctx, "base_id"), "npc")))));
+                    .executes(ctx -> setArenaSpawn(ctx, StringArgumentType.getString(ctx, "base_id"), "npc")))));
 
         dispatcher.register(root);
     }
@@ -63,12 +61,23 @@ public class AssaultCommand {
     private static int leaveBase(CommandContext<CommandSourceStack> ctx) {
         try {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
-            if (!AssaultSession.has(player.getUUID())) {
+            AssaultSession session = AssaultSession.get(player.getUUID());
+            
+            if (session == null) {
                 player.sendSystemMessage(Component.literal(
                     AssaultConfig.get().format(AssaultConfig.get().getMsgNoSession())
                 ));
                 return 0;
             }
+
+            // FIX CRÍTICO: Prevenir crasheo del motor de batalla al borrar el NPC abruptamente.
+            if (session.getState() == AssaultSession.State.IN_BATTLE) {
+                player.sendSystemMessage(Component.literal(
+                    "§c[!] No puedes salir con comandos en pleno combate. Usa el botón de Huir."
+                ));
+                return 0;
+            }
+
             AssaultManager.leaveBase(player);
             return 1;
         } catch (Exception e) {
@@ -101,7 +110,6 @@ public class AssaultCommand {
                     color + base.getOrganization() + " §8(" + base.getId() + "): " + status
                 ));
             }
-
             return 1;
         } catch (Exception e) {
             return 0;
@@ -112,6 +120,7 @@ public class AssaultCommand {
         try {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
             AssaultConfig.AssaultBase base = AssaultConfig.get().getBase(baseId);
+            
             if (base == null) {
                 player.sendSystemMessage(Component.literal(
                     AssaultConfig.get().format(AssaultConfig.get().getMsgBaseNotFound(), "%base%", baseId)
@@ -119,10 +128,14 @@ public class AssaultCommand {
                 return 0;
             }
 
-            // FIX: Si el jugador intenta resetear mientras está adentro peleando, 
-            // abortar la sesión primero para borrar el NPC y liberar la arena.
             AssaultSession session = AssaultSession.get(player.getUUID());
             if (session != null && session.getBaseId().equals(baseId)) {
+                if (session.getState() == AssaultSession.State.IN_BATTLE) {
+                    player.sendSystemMessage(Component.literal(
+                        "§c[!] No puedes reiniciar la base mientras un jugador pelea en ella."
+                    ));
+                    return 0;
+                }
                 AssaultManager.abortSession(player);
             }
 
@@ -173,14 +186,12 @@ public class AssaultCommand {
             if ("player".equals(type)) {
                 base.getArena().setPlayerSpawn(loc);
                 player.sendSystemMessage(Component.literal(
-                    "§a[CobbleJefes] Spawn de jugador guardado para §e" + baseId
-                    + " §7en §f" + formatLoc(loc)
+                    "§a[CobbleJefes] Spawn de jugador guardado para §e" + baseId + " §7en §f" + formatLoc(loc)
                 ));
             } else {
                 base.getArena().setNpcSpawn(loc);
                 player.sendSystemMessage(Component.literal(
-                    "§a[CobbleJefes] Spawn de NPC guardado para §e" + baseId
-                    + " §7en §f" + formatLoc(loc)
+                    "§a[CobbleJefes] Spawn de NPC guardado para §e" + baseId + " §7en §f" + formatLoc(loc)
                 ));
             }
 

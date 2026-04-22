@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class CobblemonMaxLevelMixin {
 
     @Inject(method = "getMaxPokemonLevel", at = @At("HEAD"), cancellable = true, remap = false)
-    private void pokefrontier$raiseMaxLevel(CallbackInfoReturnable<Integer> cir) {
+    private void cobblejefes$raiseMaxLevel(CallbackInfoReturnable<Integer> cir) {
         // Permite niveles hasta 1000 para soportar NPCs de nivel 120 en el Asalto
         cir.setReturnValue(1000);
     }

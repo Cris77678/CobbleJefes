@@ -16,12 +16,13 @@ public class PlayerLevelCapListener {
     private static int tickCounter = 0;
 
     public static void register() {
-        int maxLevel = AssaultConfig.get().getMaxPlayerLevel();
-
         // Bloqueo preventivo de EXP
         CobblemonEvents.EXPERIENCE_GAIN.subscribe(Priority.HIGHEST, event -> {
+            // FIX: Leer el nivel dinámicamente de la configuración, no cachearlo
+            int currentMaxLevel = AssaultConfig.get().getMaxPlayerLevel();
+            
             if (event.getPokemon().getPersistentData().getBoolean("bf_rental")) return Unit.INSTANCE;
-            if (event.getPokemon().getLevel() >= maxLevel) event.cancel();
+            if (event.getPokemon().getLevel() >= currentMaxLevel) event.cancel();
             return Unit.INSTANCE;
         });
 
