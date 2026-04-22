@@ -3,40 +3,33 @@ package com.tuservidor.cobblejefes.assault;
 import com.cobblemon.mod.common.Cobblemon;
 import com.cobblemon.mod.common.api.storage.party.PlayerPartyStore;
 import com.cobblemon.mod.common.pokemon.Pokemon;
-import com.tuservidor.cobblejefes.PokeFrontier;
+import com.tuservidor.cobblejefes.CobbleJefes;
 import com.tuservidor.cobblejefes.config.AssaultConfig;
 import com.tuservidor.cobblejefes.npc.AssaultNpcSpawner;
 import com.tuservidor.cobblejefes.util.LegendaryChecker;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-/**
- * Motor central del sistema de Asalto a Bases.
- *
- * Flujo normal:
- *   enterBase() → spawnCurrentNpc() → [combate] → handleBattleEnd()
- *     → onStepWon() → advanceStep() + spawnCurrentNpc() (siguiente NPC)
- *     → ... → base completada → endSession()
- *
- * Flujo de re-entrada tras desconexión:
- *   enterBase() detecta savedStep > 0 → spawnCurrentNpc() con el paso guardado
- */
 public class AssaultManager {
 
-    // ── Punto de entrada ───────────────────────────────────────────────────────
-
-    /**
-     * Llamado cuando el jugador interactúa con el trigger de una base.
-     * Si tiene progreso guardado, continúa desde donde lo dejó.
-     */
     public static void enterBase(ServerPlayer player, String baseId) {
         AssaultConfig cfg = AssaultConfig.get();
 
-        // Bloquear si ya está en sesión
         if (AssaultSession.has(player.getUUID())) {
             player.sendSystemMessage(msg(cfg.format(cfg.getMsgAlreadyInSession())));
+            return;
+        }
+
+        // FIX CRÍTICO: Evitar que un jugador entre si ya está en una batalla salvaje o PvP
+        if (Cobblemon.INSTANCE.getBattleRegistry().getBattleByParticipatingPlayer(player) != null) {
+            player.sendSystemMessage(msg("%prefix% &cNo puedes iniciar un asalto mientras estás en otro combate."));
             return;
         }
 
@@ -46,22 +39,27 @@ public class AssaultManager {
             return;
         }
 
+        if (base.getArena() != null && base.getArena().isOccupied()) {
+            player.sendSystemMessage(msg(cfg.format("%prefix% &cLa arena está ocupada por otro jugador. ¡Espera tu turno!")));
+            return;
+        }
+
         int savedStep = AssaultProgress.getStep(player.getUUID(), baseId);
 
-        // Base ya completada
         if (base.isComplete(savedStep)) {
             player.sendSystemMessage(msg(cfg.format(cfg.getMsgBaseComplete(), "%base%", baseId)));
             return;
         }
 
-        // Validar equipo del jugador
         if (!validateParty(player, base)) return;
 
-        // Crear sesión y guardar ubicación de retorno
+        if (base.getArena() != null) {
+            base.getArena().setOccupied(true);
+        }
+
         AssaultSession session = AssaultSession.start(player.getUUID(), baseId, savedStep);
         session.setReturnLocation(new AssaultConfig.AssaultBase.LocationDef(player));
 
-        // Teletransportar al jugador a la arena si está configurada
         if (base.getArena() != null && base.getArena().getPlayerSpawn() != null) {
             base.getArena().getPlayerSpawn().teleport(player);
         }
@@ -75,11 +73,6 @@ public class AssaultManager {
         spawnCurrentNpc(player, session, base);
     }
 
-    // ── Fin de combate ─────────────────────────────────────────────────────────
-
-    /**
-     * Llamado por AssaultBattleListener cuando termina un combate contra el NPC activo.
-     */
     public static void handleBattleEnd(ServerPlayer player, boolean won) {
         AssaultSession session = AssaultSession.get(player.getUUID());
         if (session == null || session.getState() != AssaultSession.State.IN_BATTLE) return;
@@ -96,22 +89,20 @@ public class AssaultManager {
         }
     }
 
-    // ── Lógica de victoria/derrota ─────────────────────────────────────────────
-
-    private static void onStepWon(ServerPlayer player, AssaultSession session,
-                                   AssaultConfig.AssaultBase base) {
+    private static void onStepWon(ServerPlayer player, AssaultSession session, AssaultConfig.AssaultBase base) {
         AssaultConfig cfg = AssaultConfig.get();
         int step = session.getCurrentStep();
-
-        // Notificación de paso completado
         String trainerId = base.getTrainerId(step);
+
         player.sendSystemMessage(msg(cfg.format(cfg.getMsgStepWon(),
             "%trainer%", trainerId != null ? trainerId : "???",
             "%step%",    step + 1,
             "%total%",   base.getSequence().size()
         )));
 
-        // Recompensas especiales
+        // Entregar recompensas individuales del entrenador
+        if (trainerId != null) grantTrainerSpecificRewards(player, trainerId);
+
         if (base.isMiniboss(step)) {
             grantRewards(player, base.getMinibossRewards());
             player.sendSystemMessage(msg(cfg.format(cfg.getMsgMinibossDefeated())));
@@ -123,20 +114,17 @@ public class AssaultManager {
             )));
         }
 
-        // Avanzar ANTES de generar el siguiente NPC (seguridad ante crash)
         AssaultProgress.advanceStep(player.getUUID(), session.getBaseId());
         int nextStep = step + 1;
         session.setCurrentStep(nextStep);
 
         if (base.isComplete(nextStep)) {
-            // Base completada
             AssaultProgress.markComplete(player.getUUID(), session.getBaseId(), base.getSequence().size());
             player.sendSystemMessage(msg(cfg.format(cfg.getMsgBaseCompleted(),
                 "%player%", player.getName().getString()
             )));
             endSession(player, session);
         } else {
-            // Generar el siguiente NPC en secuencia
             session.setState(AssaultSession.State.AWAITING_NEXT);
             spawnCurrentNpc(player, session, base);
         }
@@ -144,24 +132,16 @@ public class AssaultManager {
 
     private static void onStepLost(ServerPlayer player, AssaultSession session) {
         AssaultConfig cfg = AssaultConfig.get();
-        // El progreso NO se reinicia; el jugador puede volver a intentarlo
         player.sendSystemMessage(msg(cfg.format(cfg.getMsgStepLost())));
         endSession(player, session);
     }
 
-    // ── Spawn del NPC activo ───────────────────────────────────────────────────
-
-    /**
-     * Genera el NPC correspondiente al paso actual de la sesión.
-     * Se llama tanto al iniciar como al re-entrar y al avanzar de paso.
-     */
-    private static void spawnCurrentNpc(ServerPlayer player, AssaultSession session,
-                                         AssaultConfig.AssaultBase base) {
+    private static void spawnCurrentNpc(ServerPlayer player, AssaultSession session, AssaultConfig.AssaultBase base) {
         AssaultConfig cfg = AssaultConfig.get();
         String trainerId = base.getTrainerId(session.getCurrentStep());
 
         if (trainerId == null) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] trainerId null en paso {} de {}", session.getCurrentStep(), base.getId());
+            CobbleJefes.LOGGER.error("[CobbleJefes] trainerId null en paso {} de {}", session.getCurrentStep(), base.getId());
             endSession(player, session);
             return;
         }
@@ -180,78 +160,102 @@ public class AssaultManager {
         player.sendSystemMessage(msg("§7Rival: §e" + trainerId + " §8(" + label + ")"));
     }
 
-    // ── Salir de la base (sin perder progreso) ────────────────────────────────
-
-    /**
-     * El jugador abandona la base voluntariamente o se desconecta.
-     * El NPC desaparece pero el progreso persiste.
-     */
     public static void leaveBase(ServerPlayer player) {
         AssaultSession session = AssaultSession.get(player.getUUID());
         if (session == null) return;
 
+        AssaultConfig.AssaultBase base = AssaultConfig.get().getBase(session.getBaseId());
+        if (base != null && base.getArena() != null) base.getArena().setOccupied(false);
+
         despawnCurrentNpc(player, session);
-        // Progreso ya está en disco; solo limpiamos la sesión RAM
+        
+        if (session.getReturnLocation() != null) {
+            try {
+                session.getReturnLocation().teleport(player);
+            } catch (Exception ignored) {}
+        }
+        
         AssaultSession.remove(player.getUUID());
-        player.sendSystemMessage(msg(AssaultConfig.get().format(AssaultConfig.get().getMsgLeaveBase())));
+        try {
+            player.sendSystemMessage(msg(AssaultConfig.get().format(AssaultConfig.get().getMsgLeaveBase())));
+        } catch (Exception ignored) {}
     }
 
-    /**
-     * Abortar sesión completamente (p. ej. cambio de dimensión, respawn).
-     * Igual que leaveBase pero con mensaje distinto.
-     */
     public static void abortSession(ServerPlayer player) {
         AssaultSession session = AssaultSession.get(player.getUUID());
         if (session == null) return;
 
+        AssaultConfig.AssaultBase base = AssaultConfig.get().getBase(session.getBaseId());
+        if (base != null && base.getArena() != null) base.getArena().setOccupied(false);
+
         despawnCurrentNpc(player, session);
 
+        // Envuelto en Try-Catch para asegurar que la sesión se borre de RAM aunque falle el teleport
         if (session.getReturnLocation() != null) {
-            session.getReturnLocation().teleport(player);
+            try {
+                session.getReturnLocation().teleport(player);
+            } catch (Exception ignored) {} 
         }
 
         AssaultSession.remove(player.getUUID());
-        player.sendSystemMessage(msg(AssaultConfig.get().format(AssaultConfig.get().getMsgSessionAborted())));
+        try {
+            player.sendSystemMessage(msg(AssaultConfig.get().format(AssaultConfig.get().getMsgSessionAborted())));
+        } catch (Exception ignored) {}
     }
-
-    // ── Fin de sesión limpia ───────────────────────────────────────────────────
 
     private static void endSession(ServerPlayer player, AssaultSession session) {
+        AssaultConfig.AssaultBase base = AssaultConfig.get().getBase(session.getBaseId());
+        if (base != null && base.getArena() != null) base.getArena().setOccupied(false);
+
         despawnCurrentNpc(player, session);
-        player.closeContainer();
+        
+        try {
+            player.closeContainer();
+        } catch (Exception ignored) {}
 
         if (session.getReturnLocation() != null) {
-            session.getReturnLocation().teleport(player);
+            try {
+                session.getReturnLocation().teleport(player);
+            } catch (Exception ignored) {}
         }
+        
         AssaultSession.remove(player.getUUID());
     }
-
-    // ── Validación del equipo ─────────────────────────────────────────────────
 
     private static boolean validateParty(ServerPlayer player, AssaultConfig.AssaultBase base) {
         AssaultConfig cfg = AssaultConfig.get();
         PlayerPartyStore party = Cobblemon.INSTANCE.getStorage().getParty(player);
 
+        boolean hasUsablePokemon = false;
+
         for (Pokemon pokemon : party) {
             if (pokemon == null) continue;
+
+            // FIX: Usar getCurrentHealth para prevenir crasheo de compilación
+            if (!pokemon.isEgg() && pokemon.getCurrentHealth() > 0) {
+                hasUsablePokemon = true;
+            }
+
             String speciesId = pokemon.getSpecies().resourceIdentifier().toString();
 
-            // Verificar Pokémon individuales prohibidos
             if (base.getBannedPokemon().contains(speciesId)) {
                 player.sendSystemMessage(msg(cfg.format(cfg.getMsgBannedPokemon(), "%pokemon%", speciesId)));
                 return false;
             }
 
-            // Verificar ban de legendarios
             if (base.isBanLegendaries() && LegendaryChecker.isLegendary(pokemon)) {
                 player.sendSystemMessage(msg(cfg.format(cfg.getMsgBannedLegendary())));
                 return false;
             }
         }
+
+        if (!hasUsablePokemon) {
+            player.sendSystemMessage(msg("%prefix% &cNo puedes iniciar el asalto. Necesitas al menos un Pokémon sano que no sea un huevo."));
+            return false;
+        }
+
         return true;
     }
-
-    // ── Utilidades ─────────────────────────────────────────────────────────────
 
     private static void despawnCurrentNpc(ServerPlayer player, AssaultSession session) {
         if (session.getCurrentNpcUuid() != null) {
@@ -260,7 +264,7 @@ public class AssaultManager {
         }
     }
 
-    private static void grantRewards(ServerPlayer player, java.util.List<String> commands) {
+    private static void grantRewards(ServerPlayer player, List<String> commands) {
         if (commands == null) return;
         commands.forEach(cmd -> {
             String finalCmd = cmd.replace("{player}", player.getScoreboardName());
@@ -268,6 +272,37 @@ public class AssaultManager {
                 player.server.createCommandSourceStack(), finalCmd
             );
         });
+    }
+
+    private static void grantTrainerSpecificRewards(ServerPlayer player, String trainerId) {
+        Path cjPath = Path.of("config/cobblejefes/trainers/" + trainerId + ".yml");
+        Path pfPath = Path.of("config/pokefrontier/trainers/" + trainerId + ".yml");
+        Path bfPath = Path.of("config/battlefrontier/trainers/" + trainerId + ".yml");
+
+        Path path = Files.exists(cjPath) ? cjPath : (Files.exists(pfPath) ? pfPath : (Files.exists(bfPath) ? bfPath : null));
+        if (path == null) return;
+
+        try (java.io.Reader r = Files.newBufferedReader(path)) {
+            org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(new org.yaml.snakeyaml.constructor.SafeConstructor(new org.yaml.snakeyaml.LoaderOptions()));
+            Map<String, Object> root = yaml.load(r);
+            if (!(root.get("trainers") instanceof List<?> list)) return;
+
+            for (Object entry : list) {
+                if (!(entry instanceof Map<?, ?> m)) continue;
+                if (!trainerId.equals(m.get("trainer_id"))) continue;
+
+                if (m.get("rewards") instanceof Map<?, ?> rewMap) {
+                    if (rewMap.get("commands") instanceof List<?> cmds) {
+                        List<String> commands = new ArrayList<>();
+                        for (Object cmd : cmds) commands.add(cmd.toString());
+                        grantRewards(player, commands);
+                    }
+                }
+                break;
+            }
+        } catch (Exception e) {
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error leyendo recompensas individuales de {}", trainerId, e);
+        }
     }
 
     private static Component msg(String text) {
