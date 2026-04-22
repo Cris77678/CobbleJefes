@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "pokefrontier",
+  "version": "${version}",
+  "name": "PokeFrontier",
+  "description": "Sistema de Asalto a Bases Pokémon (Team Rocket, Team Flare, etc.) con progreso secuencial y persistente por jugador.",
+  "authors": ["TuServidor"],
+  "license": "All-Rights-Reserved",
+  "environment": "server",
+  "entrypoints": {
+    "server": ["com.tuservidor.pokefrontier.PokeFrontier"]
+  },
+  "mixins": [
+    "pokefrontier.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "cobblemon": ">=1.7.0",
+    "cobblemonnpcs": ">=0.1.0"
+  }
+}

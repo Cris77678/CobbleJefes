@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.tuservidor.pokefrontier.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CobblemonMaxLevelMixin",
+    "CommandBlockerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,176 @@
+# Entrenadores de ejemplo para la base del Team Rocket
+# Coloca este archivo en: config/pokefrontier/trainers/
+# O usa /exporttrainer <trainer_id> para generar archivos desde tu equipo actual.
+
+trainers:
+
+  # ── PASO 0: Grunt 1 ──────────────────────────────────────────────────────────
+  - trainer_id: "rocket_grunt1"
+    trainer_name: "Soldado Rocket"
+    battle_dialogue: "¡El Team Rocket no se rinde!"
+    defeat_dialogue: "¡Imposible! ¡Un día me vengaré!"
+    cooldown_hours: 0
+    pokemon_team:
+      - species: "cobblemon:raticate"
+        level: 80
+        nature: "adamant"
+        ability: "guts"
+        moves: ["hyperbeam", "facade", "suckerpunch", "irontail"]
+      - species: "cobblemon:arbok"
+        level: 80
+        nature: "jolly"
+        ability: "intimidate"
+        moves: ["gunkshot", "earthquake", "coil", "suckerpunch"]
+      - species: "cobblemon:weezing"
+        level: 80
+        nature: "bold"
+        ability: "levitate"
+        moves: ["sludgebomb", "willowisp", "thunderbolt", "painsplit"]
+
+  # ── PASO 1: Grunt 2 ──────────────────────────────────────────────────────────
+  - trainer_id: "rocket_grunt2"
+    trainer_name: "Soldado Rocket Élite"
+    battle_dialogue: "¡El Team Rocket domina el mundo Pokémon!"
+    defeat_dialogue: "¡Esto no puede ser!"
+    cooldown_hours: 0
+    pokemon_team:
+      - species: "cobblemon:persian"
+        level: 85
+        nature: "timid"
+        ability: "technician"
+        moves: ["feintattack", "swift", "powergemshard", "nastyplot"]
+      - species: "cobblemon:haunter"
+        level: 85
+        nature: "timid"
+        ability: "levitate"
+        moves: ["shadowball", "sludgebomb", "thunderbolt", "meanlook"]
+      - species: "cobblemon:machoke"
+        level: 85
+        nature: "adamant"
+        ability: "guts"
+        moves: ["dynamicpunch", "bulletpunch", "icepunch", "knockoff"]
+
+  # ── PASO 2: Grunt 3 ──────────────────────────────────────────────────────────
+  - trainer_id: "rocket_grunt3"
+    trainer_name: "Especialista Rocket"
+    battle_dialogue: "¡Nuestro poder no tiene límites!"
+    defeat_dialogue: "¡Maldición!"
+    cooldown_hours: 0
+    pokemon_team:
+      - species: "cobblemon:electrode"
+        level: 88
+        nature: "timid"
+        ability: "soundproof"
+        moves: ["thunderbolt", "voltswitch", "explosion", "lightscreen"]
+      - species: "cobblemon:golbat"
+        level: 88
+        nature: "jolly"
+        ability: "innerfocus"
+        moves: ["bravebird", "crosspoison", "roost", "supersonic"]
+      - species: "cobblemon:hitmonchan"
+        level: 88
+        nature: "adamant"
+        ability: "ironfoot"
+        moves: ["icepunch", "firepunch", "thunderpunch", "machpunch"]
+      - species: "cobblemon:nidoking"
+        level: 88
+        nature: "modest"
+        ability: "sheerforce"
+        moves: ["earthpower", "sludgewave", "flamethrower", "icebeam"]
+
+  # ── PASO 3: Admin Archer (MINI-JEFE) ─────────────────────────────────────────
+  - trainer_id: "rocket_admin_archer"
+    trainer_name: "Admin Archer del Team Rocket"
+    battle_dialogue: "¡El Team Rocket conquistará el mundo! ¡Yo me encargaré de ti!"
+    defeat_dialogue: "¡No es posible... El jefe Giovanni no puede saber de esto..."
+    cooldown_hours: 0
+    pokemon_team:
+      - species: "cobblemon:houndoom"
+        level: 95
+        nature: "timid"
+        ability: "flashfire"
+        moves: ["fireblast", "darkpulse", "nastyplot", "destinybond"]
+      - species: "cobblemon:vileplume"
+        level: 95
+        nature: "modest"
+        ability: "chlorophyll"
+        moves: ["sludgebomb", "energyball", "sleeppowder", "moonblast"]
+      - species: "cobblemon:alakazam"
+        level: 95
+        nature: "timid"
+        ability: "magicguard"
+        moves: ["psychic", "shadowball", "focusblast", "calmmind"]
+      - species: "cobblemon:steelix"
+        level: 95
+        nature: "impish"
+        ability: "sturdy"
+        moves: ["ironhead", "earthquake", "stealthrock", "rockblast"]
+      - species: "cobblemon:crobat"
+        level: 95
+        nature: "jolly"
+        ability: "innerfocus"
+        moves: ["bravebird", "crosspoison", "uturn", "roost"]
+      - species: "cobblemon:gyarados"
+        level: 95
+        nature: "adamant"
+        ability: "intimidate"
+        moves: ["waterfall", "icefang", "earthquake", "dragondance"]
+
+  # ── PASO 4: Giovanni (JEFE FINAL) ────────────────────────────────────────────
+  - trainer_id: "giovanni"
+    trainer_name: "Giovanni, Líder del Team Rocket"
+    battle_dialogue: "¿Así que tú eres quien ha derrotado a todos mis hombres? ¡Prepárate para conocer el verdadero poder!"
+    defeat_dialogue: "...Eres poderoso. Pero el Team Rocket no ha terminado. Esto no acabará aquí."
+    cooldown_hours: 0
+    pokemon_team:
+      - species: "cobblemon:nidoqueen"
+        level: 100
+        nature: "modest"
+        ability: "sheerforce"
+        moves: ["earthpower", "icebeam", "sludgewave", "flamethrower"]
+        ivs:
+          hp: 31
+          attack: 31
+          defence: 31
+          special_attack: 31
+          special_defence: 31
+          speed: 31
+      - species: "cobblemon:nidoking"
+        level: 100
+        nature: "modest"
+        ability: "sheerforce"
+        moves: ["earthpower", "sludgewave", "flamethrower", "icebeam"]
+        ivs:
+          hp: 31
+          attack: 31
+          defence: 31
+          special_attack: 31
+          special_defence: 31
+          speed: 31
+      - species: "cobblemon:rhyperior"
+        level: 100
+        nature: "adamant"
+        ability: "solidrock"
+        moves: ["earthquake", "stoneedge", "megahorn", "hammingarm"]
+      - species: "cobblemon:dugtrio"
+        level: 100
+        nature: "jolly"
+        ability: "arenatrap"
+        moves: ["earthquake", "stoneedge", "suckerpunch", "rockslide"]
+      - species: "cobblemon:cloyster"
+        level: 100
+        nature: "jolly"
+        ability: "skilllink"
+        moves: ["shellsmash", "iciclespear", "rockblast", "razorshell"]
+      - species: "cobblemon:persian"
+        level: 100
+        nature: "timid"
+        ability: "technician"
+        moves: ["feintattack", "swift", "snarl", "nastyplot"]
+        ivs:
+          hp: 31
+          attack: 31
+          defence: 31
+          special_attack: 31
+          special_defence: 31
+          speed: 31
