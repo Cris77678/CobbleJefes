@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "cobblejefes",
   "version": "${version}",
-  "name": "PokeFrontier",
+  "name": "CobbleJefes",
   "description": "Sistema de Asalto a Bases Pokémon (Team Rocket, Team Flare, etc.) con progreso secuencial y persistente por jugador.",
   "authors": ["TuServidor"],
   "license": "All-Rights-Reserved",
