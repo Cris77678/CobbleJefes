@@ -22,7 +22,9 @@ public class AssaultSession {
     private UUID   currentNpcUuid;
     private State  state = State.IDLE;
     private AssaultConfig.AssaultBase.LocationDef returnLocation;
+    
     private long   startTime;
+    private long   lastActivityTime;
 
     public enum State {
         IDLE,
@@ -33,6 +35,7 @@ public class AssaultSession {
     private AssaultSession(UUID playerUuid) {
         this.playerUuid = playerUuid;
         this.startTime  = System.currentTimeMillis();
+        this.lastActivityTime = this.startTime;
     }
 
     // ── Factory / Registro ─────────────────────────────────────────────────────
@@ -43,6 +46,10 @@ public class AssaultSession {
         s.currentStep = step;
         SESSIONS.put(uuid, s);
         return s;
+    }
+
+    public void markActive() {
+        this.lastActivityTime = System.currentTimeMillis();
     }
 
     public static AssaultSession get(UUID uuid)    { return SESSIONS.get(uuid); }

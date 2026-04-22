@@ -78,7 +78,6 @@ public class ExportGui {
             c.setItem(10 + i, sprite);
         }
 
-        // FIX: Se actualizaron todos los textos de sugerencia a /cjset
         c.setItem(28, makeItem(Items.NAME_TAG, "§b§lID del Entrenador", List.of("§7Actual: §e" + draft.getTrainerId(), "", "§aClick para editar", "§8→ /cjset id <valor>")));
         c.setItem(30, makeItem(Items.WRITABLE_BOOK, "§a§lNombre del Entrenador", List.of("§7Actual: §e" + draft.getTrainerName(), "", "§aClick para editar", "§8→ /cjset name <valor>")));
         c.setItem(32, makeItem(Items.BOOK, "§d§lDialogo de Batalla", List.of("§7Actual: §e" + truncate(draft.getBattleDialogue(), 35), "", "§aClick para editar", "§8→ /cjset battle <texto>")));
@@ -162,12 +161,29 @@ public class ExportGui {
 
     public static class ExportMenu extends ChestMenu {
         private final Map<Integer, Runnable> handlers;
-        public ExportMenu(int syncId, Inventory playerInv, SimpleContainer container, Map<Integer, Runnable> handlers) { super(MenuType.GENERIC_9x6, syncId, playerInv, container, 6); this.handlers = handlers; }
-        @Override public void clicked(int slotId, int button, ClickType clickType, Player player) {
-            if (slotId >= 0 && slotId < 54) { Runnable handler = handlers.get(slotId); if (handler != null) handler.run(); }
-            if (player instanceof ServerPlayer sp) { sp.containerMenu.broadcastChanges(); sp.inventoryMenu.broadcastChanges(); }
+        
+        public ExportMenu(int syncId, Inventory playerInv, SimpleContainer container, Map<Integer, Runnable> handlers) { 
+            super(MenuType.GENERIC_9x6, syncId, playerInv, container, 6); 
+            this.handlers = handlers; 
         }
+        
+        @Override 
+        public void clicked(int slotId, int button, ClickType clickType, Player player) {
+            // FIX: Cancelamos completamente la manipulación nativa del menú para evitar robo de ítems
+            if (slotId >= 0 && slotId < 54) { 
+                Runnable handler = handlers.get(slotId); 
+                if (handler != null) handler.run(); 
+            }
+            if (player instanceof ServerPlayer sp) { 
+                // Forzamos al cliente a borrar cualquier ítem fantasma en su cursor
+                sp.containerMenu.broadcastChanges(); 
+                sp.inventoryMenu.broadcastChanges(); 
+            }
+        }
+        
         @Override public boolean stillValid(Player player) { return true; }
+        
+        // FIX: Evita atajos de teclado (Shift-Click) para robar ítems
         @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }
     }
 }
