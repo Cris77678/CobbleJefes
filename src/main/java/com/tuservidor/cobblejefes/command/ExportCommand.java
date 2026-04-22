@@ -3,7 +3,7 @@ package com.tuservidor.cobblejefes.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.tuservidor.cobblejefes.PokeFrontier;
+import com.tuservidor.cobblejefes.CobbleJefes;
 import com.tuservidor.cobblejefes.export.ExportSession;
 import com.tuservidor.cobblejefes.export.PartyExporter;
 import com.tuservidor.cobblejefes.gui.ExportGui;
@@ -23,71 +23,49 @@ public class ExportCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 
-        // ── /exporttrainer ────────────────────────────────────────────────────
-        var exportBase = Commands.literal("exporttrainer")
-            .requires(src -> src.hasPermission(2));
+        var exportBase = Commands.literal("exporttrainer").requires(src -> src.hasPermission(2));
 
         exportBase.then(Commands.literal("gui").executes(ctx -> openGui(ctx.getSource())));
 
         exportBase.then(Commands.literal("clear").executes(ctx -> {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
             ExportSession.clear(player.getUUID());
-            player.sendSystemMessage(Component.literal("§a[PokeFrontier] Sesión de exportación limpiada."));
+            player.sendSystemMessage(Component.literal("§a[CobbleJefes] Sesión de exportación limpiada."));
             return 1;
         }));
 
         exportBase.then(Commands.argument("trainer_id", StringArgumentType.word())
-            .executes(ctx -> quickExport(ctx.getSource(),
-                StringArgumentType.getString(ctx, "trainer_id"))));
+            .executes(ctx -> quickExport(ctx.getSource(), StringArgumentType.getString(ctx, "trainer_id"))));
 
         exportBase.executes(ctx -> openGui(ctx.getSource()));
         dispatcher.register(exportBase);
 
-        // ── /bfset ────────────────────────────────────────────────────────────
-        var bfset = Commands.literal("bfset")
-            .requires(src -> src.hasPermission(2));
+        var bfset = Commands.literal("bfset").requires(src -> src.hasPermission(2));
 
-        bfset.then(Commands.literal("id")
-            .then(Commands.argument("value", StringArgumentType.word())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setTrainerId(StringArgumentType.getString(ctx, "value").toLowerCase()),
-                    "ID", StringArgumentType.getString(ctx, "value")))));
+        bfset.then(Commands.literal("id").then(Commands.argument("value", StringArgumentType.word())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setTrainerId(StringArgumentType.getString(ctx, "value").toLowerCase()), "ID", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("name")
-            .then(Commands.argument("value", StringArgumentType.greedyString())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setTrainerName(StringArgumentType.getString(ctx, "value")),
-                    "Nombre", StringArgumentType.getString(ctx, "value")))));
+        bfset.then(Commands.literal("name").then(Commands.argument("value", StringArgumentType.greedyString())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setTrainerName(StringArgumentType.getString(ctx, "value")), "Nombre", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("battle")
-            .then(Commands.argument("value", StringArgumentType.greedyString())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setBattleDialogue(StringArgumentType.getString(ctx, "value")),
-                    "Diálogo de batalla", StringArgumentType.getString(ctx, "value")))));
+        bfset.then(Commands.literal("battle").then(Commands.argument("value", StringArgumentType.greedyString())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setBattleDialogue(StringArgumentType.getString(ctx, "value")), "Diálogo de batalla", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("defeat")
-            .then(Commands.argument("value", StringArgumentType.greedyString())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setDefeatDialogue(StringArgumentType.getString(ctx, "value")),
-                    "Diálogo de derrota", StringArgumentType.getString(ctx, "value")))));
+        bfset.then(Commands.literal("defeat").then(Commands.argument("value", StringArgumentType.greedyString())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setDefeatDialogue(StringArgumentType.getString(ctx, "value")), "Diálogo de derrota", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("skin")
-            .then(Commands.argument("value", StringArgumentType.word())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setSkin(StringArgumentType.getString(ctx, "value")),
-                    "Skin", StringArgumentType.getString(ctx, "value")))));
+        bfset.then(Commands.literal("skin").then(Commands.argument("value", StringArgumentType.word())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setSkin(StringArgumentType.getString(ctx, "value")), "Skin", StringArgumentType.getString(ctx, "value")))));
 
-        bfset.then(Commands.literal("cooldown")
-            .then(Commands.argument("hours", DoubleArgumentType.doubleArg(0, 720))
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.setCooldownHours(DoubleArgumentType.getDouble(ctx, "hours")),
-                    "Cooldown", DoubleArgumentType.getDouble(ctx, "hours") + "h"))));
+        bfset.then(Commands.literal("cooldown").then(Commands.argument("hours", DoubleArgumentType.doubleArg(0, 720))
+                .executes(ctx -> setField(ctx.getSource(), d -> d.setCooldownHours(DoubleArgumentType.getDouble(ctx, "hours")), "Cooldown", DoubleArgumentType.getDouble(ctx, "hours") + "h"))));
 
-        bfset.then(Commands.literal("rewardcmd")
-            .then(Commands.argument("cmd", StringArgumentType.greedyString())
-                .executes(ctx -> setField(ctx.getSource(),
-                    d -> d.getRewards().getCommands().add(StringArgumentType.getString(ctx, "cmd")),
-                    "Comando de Recompensa añadido", StringArgumentType.getString(ctx, "cmd")))));
+        bfset.then(Commands.literal("rewardcmd").then(Commands.argument("cmd", StringArgumentType.greedyString())
+                .executes(ctx -> setField(ctx.getSource(), d -> d.getRewards().getCommands().add(StringArgumentType.getString(ctx, "cmd")), "Comando añadido", StringArgumentType.getString(ctx, "cmd")))));
+
+        // FIX: Nuevo comando para poder borrar si el jugador se equivoca tipeando las recompensas
+        bfset.then(Commands.literal("rewardclear").executes(ctx -> setField(ctx.getSource(), 
+                d -> d.getRewards().getCommands().clear(), "Comandos de recompensa", "Limpiados")));
 
         dispatcher.register(bfset);
     }
@@ -98,13 +76,13 @@ public class ExportCommand {
 
             ExportSession existing = ExportSession.get(player.getUUID());
             if (existing != null) {
-                PokeFrontier.SERVER.execute(() -> new ExportGui(player, existing.getDraft(), EXPORTER).open());
+                CobbleJefes.SERVER.execute(() -> new ExportGui(player, existing.getDraft(), EXPORTER).open());
                 return 1;
             }
 
             TrainerExport draft = EXPORTER.buildFromParty(player);
             if (draft.getPokemonTeam().isEmpty()) {
-                player.sendSystemMessage(Component.literal("§c[PokeFrontier] No tienes Pokémon en tu equipo."));
+                player.sendSystemMessage(Component.literal("§c[CobbleJefes] No tienes Pokémon en tu equipo."));
                 return 0;
             }
 
@@ -120,11 +98,11 @@ public class ExportCommand {
             for (var pk : party) { if (pk != null) realPokemon.add(pk); }
 
             ExportSession.start(player.getUUID(), draft, realPokemon);
-            PokeFrontier.SERVER.execute(() -> new ExportGui(player, draft, EXPORTER).open());
+            CobbleJefes.SERVER.execute(() -> new ExportGui(player, draft, EXPORTER).open());
             return 1;
 
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error abriendo GUI de exportación", e);
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error abriendo GUI", e);
             return 0;
         }
     }
@@ -134,7 +112,7 @@ public class ExportCommand {
             ServerPlayer player = src.getPlayerOrException();
             TrainerExport trainer = EXPORTER.buildFromParty(player);
             if (trainer.getPokemonTeam().isEmpty()) {
-                player.sendSystemMessage(Component.literal("§c[PokeFrontier] No tienes Pokémon en tu equipo."));
+                player.sendSystemMessage(Component.literal("§c[CobbleJefes] No tienes Pokémon en tu equipo."));
                 return 0;
             }
 
@@ -146,37 +124,28 @@ public class ExportCommand {
             trainer.setRewards(new TrainerExport.RewardEntry(new ArrayList<>(), new ArrayList<>()));
 
             String path = EXPORTER.writeTrainer(trainer);
-            player.sendSystemMessage(Component.literal(
-                "§a[PokeFrontier] §7Exportado como §e" + trainerId + " §7→ §e" + path
-            ));
+            player.sendSystemMessage(Component.literal("§a[CobbleJefes] §7Exportado como §e" + trainerId + " §7→ §e" + path));
             return 1;
 
         } catch (IOException e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error en quick export", e);
-            src.sendFailure(Component.literal("§c[PokeFrontier] Error: " + e.getMessage()));
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error quick export", e);
+            src.sendFailure(Component.literal("§c[CobbleJefes] Error: " + e.getMessage()));
             return 0;
         }
     }
 
-    private static int setField(CommandSourceStack src, Consumer<TrainerExport> setter,
-                                  String fieldName, Object value) {
+    private static int setField(CommandSourceStack src, Consumer<TrainerExport> setter, String fieldName, Object value) {
         try {
             ServerPlayer player = src.getPlayerOrException();
             ExportSession session = ExportSession.get(player.getUUID());
             if (session == null) {
-                player.sendSystemMessage(Component.literal(
-                    "§c[PokeFrontier] No tienes sesión activa. Usa §e/exporttrainer gui §cprimero."
-                ));
+                player.sendSystemMessage(Component.literal("§c[CobbleJefes] No tienes sesión activa. Usa §e/exporttrainer gui"));
                 return 0;
             }
             setter.accept(session.getDraft());
-            player.sendSystemMessage(Component.literal(
-                "§a[PokeFrontier] §7" + fieldName + " actualizado: §e" + value
-            ));
-            PokeFrontier.SERVER.execute(() -> new ExportGui(player, session.getDraft(), EXPORTER).open());
+            player.sendSystemMessage(Component.literal("§a[CobbleJefes] §7" + fieldName + " actualizado: §e" + value));
+            CobbleJefes.SERVER.execute(() -> new ExportGui(player, session.getDraft(), EXPORTER).open());
             return 1;
-        } catch (Exception e) {
-            return 0;
-        }
+        } catch (Exception e) { return 0; }
     }
 }
