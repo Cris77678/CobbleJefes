@@ -36,16 +36,17 @@ public class PartyExporter {
                     .getKey(p.getHeldItem().getItem()).toString();
             }
 
+            // FIX: Cobblemon utiliza "DEFENCE" con 'C' para Defensa y Defensa Especial
             TrainerExport.Ivs ivs = new TrainerExport.Ivs(
                 p.getIvs().getOrDefault(Stats.HP), p.getIvs().getOrDefault(Stats.ATTACK),
-                p.getIvs().getOrDefault(Stats.DEFENSE), p.getIvs().getOrDefault(Stats.SPECIAL_ATTACK),
-                p.getIvs().getOrDefault(Stats.SPECIAL_DEFENSE), p.getIvs().getOrDefault(Stats.SPEED)
+                p.getIvs().getOrDefault(Stats.DEFENCE), p.getIvs().getOrDefault(Stats.SPECIAL_ATTACK),
+                p.getIvs().getOrDefault(Stats.SPECIAL_DEFENCE), p.getIvs().getOrDefault(Stats.SPEED)
             );
 
             TrainerExport.Evs evs = new TrainerExport.Evs(
                 p.getEvs().getOrDefault(Stats.HP), p.getEvs().getOrDefault(Stats.ATTACK),
-                p.getEvs().getOrDefault(Stats.DEFENSE), p.getEvs().getOrDefault(Stats.SPECIAL_ATTACK),
-                p.getEvs().getOrDefault(Stats.SPECIAL_DEFENSE), p.getEvs().getOrDefault(Stats.SPEED)
+                p.getEvs().getOrDefault(Stats.DEFENCE), p.getEvs().getOrDefault(Stats.SPECIAL_ATTACK),
+                p.getEvs().getOrDefault(Stats.SPECIAL_DEFENCE), p.getEvs().getOrDefault(Stats.SPEED)
             );
 
             pokemonList.add(new TrainerExport.PokemonEntry(
@@ -68,6 +69,12 @@ public class PartyExporter {
         if (trainer.getDefeatDialogue() != null) trainerMap.put("defeat_dialogue", trainer.getDefeatDialogue());
         trainerMap.put("cooldown_hours", trainer.getCooldownHours());
         if (trainer.getSkin() != null) trainerMap.put("skin", trainer.getSkin());
+
+        if (trainer.getRewards() != null && trainer.getRewards().getCommands() != null && !trainer.getRewards().getCommands().isEmpty()) {
+            Map<String, Object> rewMap = new LinkedHashMap<>();
+            rewMap.put("commands", trainer.getRewards().getCommands());
+            trainerMap.put("rewards", rewMap);
+        }
 
         List<Map<String, Object>> pkmnList = new ArrayList<>();
         for (TrainerExport.PokemonEntry p : trainer.getPokemonTeam()) {
@@ -98,7 +105,6 @@ public class PartyExporter {
         Map<String, Object> root = new HashMap<>();
         root.put("trainers", List.of(trainerMap));
 
-        // FIX: Cambiado el directorio a config/cobblejefes para mantener la coherencia del mod
         Path dir = Path.of("config/cobblejefes/trainers");
         Files.createDirectories(dir);
         Path file = dir.resolve(trainer.getTrainerId() + ".yml");
