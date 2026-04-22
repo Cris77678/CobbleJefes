@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PokeFrontier implements ModInitializer {
+public class CobbleJefes implements ModInitializer {
 
     public static final String MOD_ID = "pokefrontier";
     public static final Logger LOGGER = LoggerFactory.getLogger("PokeFrontier");
