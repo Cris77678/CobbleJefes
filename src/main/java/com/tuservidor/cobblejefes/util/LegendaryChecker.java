@@ -11,6 +11,9 @@ public class LegendaryChecker {
     );
 
     public static boolean isLegendary(Pokemon pokemon) {
+        // FIX: Evita NullPointerExceptions silenciosas en validaciones
+        if (pokemon == null) return false;
+        
         try {
             var labels = pokemon.getSpecies().getLabels();
             for (String label : LEGENDARY_LABELS) {
@@ -25,7 +28,7 @@ public class LegendaryChecker {
     public static int countLegendaries(List<Pokemon> team) {
         int count = 0;
         for (Pokemon p : team) {
-            if (p != null && isLegendary(p)) count++;
+            if (isLegendary(p)) count++;
         }
         return count;
     }
