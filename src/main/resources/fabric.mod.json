@@ -8,7 +8,7 @@
   "license": "All-Rights-Reserved",
   "environment": "server",
   "entrypoints": {
-    "server": ["com.tuservidor.pokefrontier.PokeFrontier"]
+    "server": ["com.tuservidor.cobblejefes.PokeFrontier"]
   },
   "mixins": [
     "pokefrontier.mixins.json"
