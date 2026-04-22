@@ -98,8 +98,8 @@ public class PartyExporter {
         Map<String, Object> root = new HashMap<>();
         root.put("trainers", List.of(trainerMap));
 
-        // Guardar en pokefrontier primero
-        Path dir = Path.of("config/pokefrontier/trainers");
+        // FIX: Cambiado el directorio a config/cobblejefes para mantener la coherencia del mod
+        Path dir = Path.of("config/cobblejefes/trainers");
         Files.createDirectories(dir);
         Path file = dir.resolve(trainer.getTrainerId() + ".yml");
 
