@@ -6,7 +6,7 @@ import com.cobblemon.mod.common.api.pokemon.PokemonProperties;
 import com.cobblemon.mod.common.api.storage.party.NPCPartyStore;
 import com.cobblemon.mod.common.entity.npc.NPCEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
-import com.tuservidor.cobblejefes.PokeFrontier;
+import com.tuservidor.cobblejefes.CobbleJefes;
 import com.tuservidor.cobblejefes.config.AssaultConfig;
 import com.tuservidor.cobblejefes.glow.FrontierGlow;
 import net.minecraft.network.chat.Component;
@@ -25,21 +25,12 @@ import java.util.*;
 
 public class AssaultNpcSpawner {
 
-    /**
-     * Genera el NPC entrenador en el mundo, usando la configuración de arena de la base.
-     *
-     * @param player   Jugador contra quien se genera el NPC
-     * @param trainerId ID del entrenador (nombre del archivo YAML sin extensión)
-     * @param base     Base a la que pertenece el combate (para posicionamiento)
-     * @return UUID de la entidad generada, o null si falló
-     */
     public static UUID spawnTrainer(ServerPlayer player, String trainerId,
                                      AssaultConfig.AssaultBase base) {
         try {
             ServerLevel level = player.serverLevel();
             AssaultConfig cfg = AssaultConfig.get();
 
-            // Determinar posición del NPC
             Vec3 pos;
             float yaw;
 
@@ -52,41 +43,34 @@ public class AssaultNpcSpawner {
                 yaw = cfg.getDefaultNpcYaw();
             }
 
-            // Crear entidad NPC
             NPCEntity npc = new NPCEntity(level);
             NPCClass npcClass = Optional.ofNullable(NPCClasses.INSTANCE.getByName("standard"))
                 .orElse(NPCClasses.INSTANCE.random());
             npc.setNpc(npcClass);
 
-            // Propiedades de seguridad
             npc.setInvulnerable(true);
             npc.setNoAi(true);
             npc.setPersistenceRequired();
             npc.getPersistentData().putBoolean("NoLoot", true);
             npc.getPersistentData().putBoolean("prevent_capture", true);
 
-            // Nombre visible con color de la organización
             String orgColor = (base != null) ? base.getDisplayColor() : "§e";
             String orgName  = (base != null) ? base.getOrganization()  : "Base";
             npc.setCustomName(Component.literal(orgColor + "[" + orgName + "] §f" + trainerId));
             npc.setCustomNameVisible(true);
 
-            // Tags para identificación
             npc.addTag("pf_assault");
             npc.addTag("pf_trainer=" + trainerId);
             if (base != null) npc.addTag("pf_base=" + base.getId());
 
-            // Posicionar
             npc.moveTo(pos.x, pos.y + cfg.getNpcYOffset(), pos.z, yaw, 0);
             npc.setYHeadRot(yaw);
 
-            // Cargar equipo desde YAML
             NPCPartyStore party = new NPCPartyStore(npc);
             loadTeamFromYaml(party, trainerId);
             party.initialize();
             npc.setParty(party);
 
-            // Agregar al mundo
             if (level.addFreshEntity(npc)) {
                 FrontierGlow.applyNpcGlow(npc, level);
                 return npc.getUUID();
@@ -94,37 +78,34 @@ public class AssaultNpcSpawner {
             return null;
 
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error al generar NPC '{}': {}", trainerId, e.getMessage(), e);
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error al generar NPC '{}': {}", trainerId, e.getMessage(), e);
             return null;
         }
     }
 
-    /**
-     * Elimina el NPC del mundo.
-     */
     public static void despawnNpc(ServerPlayer player, UUID uuid) {
         if (uuid == null) return;
         Entity entity = player.serverLevel().getEntity(uuid);
-        if (entity != null) entity.discard();
+        if (entity != null) {
+            FrontierGlow.removeGlow(entity, player.serverLevel());
+            entity.discard();
+        }
     }
 
-    /**
-     * Comprueba si una entidad es un NPC de asalto.
-     */
     public static boolean isAssaultNpc(Entity entity) {
         return entity.getTags().contains("pf_assault");
     }
 
-    // ── Carga de equipo desde YAML ─────────────────────────────────────────────
-
     private static void loadTeamFromYaml(NPCPartyStore party, String trainerId) {
-        // Buscar en la carpeta de trainers de PokeFrontier primero, luego en BattleFrontier
+        // FIX: Buscar en cobblejefes primero, pero permitir retrocompatibilidad
+        Path cjPath = Path.of("config/cobblejefes/trainers/" + trainerId + ".yml");
         Path pfPath = Path.of("config/pokefrontier/trainers/" + trainerId + ".yml");
         Path bfPath = Path.of("config/battlefrontier/trainers/" + trainerId + ".yml");
 
-        Path path = Files.exists(pfPath) ? pfPath : (Files.exists(bfPath) ? bfPath : null);
+        Path path = Files.exists(cjPath) ? cjPath : (Files.exists(pfPath) ? pfPath : (Files.exists(bfPath) ? bfPath : null));
+        
         if (path == null) {
-            PokeFrontier.LOGGER.warn("[PokeFrontier] Archivo de entrenador no encontrado: {}", trainerId);
+            CobbleJefes.LOGGER.warn("[CobbleJefes] Archivo de entrenador no encontrado: {}", trainerId);
             return;
         }
 
@@ -151,7 +132,6 @@ public class AssaultNpcSpawner {
 
                     StringBuilder props = new StringBuilder("species=").append(species).append(" level=").append(level);
 
-                    // Objeto equipado y mega-stones
                     if (pkMap.get("held_item") instanceof String heldItem && !heldItem.isEmpty()) {
                         props.append(" helditem=").append(heldItem);
                         Map<String, String> megaStones = AssaultConfig.get().getNpcMegaStones();
@@ -160,29 +140,24 @@ public class AssaultNpcSpawner {
                         }
                     }
 
-                    // Naturaleza
                     if (pkMap.get("nature") instanceof String nature && !nature.isEmpty()) {
                         props.append(" nature=").append(nature);
                     }
 
-                    // Habilidad
                     if (pkMap.get("ability") instanceof String ability && !ability.isEmpty()) {
                         props.append(" ability=").append(ability);
                     }
 
-                    // Movimientos
                     if (pkMap.get("moves") instanceof List<?> movesList) {
                         List<String> moves = new ArrayList<>();
                         for (Object move : movesList) moves.add(move.toString());
                         if (!moves.isEmpty()) props.append(" moves=").append(String.join(",", moves));
                     }
 
-                    // IVs
                     if (pkMap.get("ivs") instanceof Map<?, ?> ivMap) {
                         appendStats(props, "ivs", ivMap);
                     }
 
-                    // EVs
                     if (pkMap.get("evs") instanceof Map<?, ?> evMap) {
                         appendStats(props, "evs", evMap);
                     }
@@ -194,15 +169,14 @@ public class AssaultNpcSpawner {
                         party.set(slot++, p);
                     }
                 }
-                break; // trainer_id encontrado, salir del loop
+                break;
             }
         } catch (Exception e) {
-            PokeFrontier.LOGGER.error("[PokeFrontier] Error leyendo YAML del entrenador '{}': {}", trainerId, e.getMessage());
+            CobbleJefes.LOGGER.error("[CobbleJefes] Error leyendo YAML del entrenador '{}': {}", trainerId, e.getMessage());
         }
     }
 
     private static void appendStats(StringBuilder props, String type, Map<?, ?> statMap) {
-        // Cobblemon acepta: ivs=hp:31,attack:31,...
         List<String> parts = new ArrayList<>();
         String[] keys = {"hp", "attack", "defence", "special_attack", "special_defence", "speed"};
         for (String key : keys) {
