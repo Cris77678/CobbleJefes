@@ -18,8 +18,8 @@ import java.util.concurrent.Executors;
 
 public class CobbleJefes implements ModInitializer {
 
-    public static final String MOD_ID = "pokefrontier";
-    public static final Logger LOGGER = LoggerFactory.getLogger("PokeFrontier");
+    public static final String MOD_ID = "cobblejefes";
+    public static final Logger LOGGER = LoggerFactory.getLogger("CobbleJefes");
     public static MinecraftServer SERVER;
 
     private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool();
