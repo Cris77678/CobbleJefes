@@ -14,44 +14,28 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
-/**
- * Comandos del sistema de Asalto a Bases.
- *
- * /assault enter <base_id>   — Entrar a una base (o continuar progreso guardado)
- * /assault leave             — Salir de la base (conserva progreso)
- * /assault status            — Ver progreso en todas las bases
- * /assault reset <base_id>  — Reiniciar progreso en una base (admin)
- * /assault reload            — Recargar configuración (admin)
- * /assault setarena <base_id> player|npc — Guardar posición actual como spawn (admin)
- */
 public class AssaultCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         var root = Commands.literal("assault");
 
-        // /assault enter <base_id>
         root.then(Commands.literal("enter")
             .then(Commands.argument("base_id", StringArgumentType.word())
                 .executes(ctx -> enterBase(ctx, StringArgumentType.getString(ctx, "base_id")))));
 
-        // /assault leave
         root.then(Commands.literal("leave").executes(AssaultCommand::leaveBase));
 
-        // /assault status
         root.then(Commands.literal("status").executes(AssaultCommand::showStatus));
 
-        // /assault reset <base_id> (op)
         root.then(Commands.literal("reset")
             .requires(src -> src.hasPermission(2))
             .then(Commands.argument("base_id", StringArgumentType.word())
                 .executes(ctx -> resetProgress(ctx, StringArgumentType.getString(ctx, "base_id")))));
 
-        // /assault reload (op)
         root.then(Commands.literal("reload")
             .requires(src -> src.hasPermission(2))
             .executes(AssaultCommand::reloadConfig));
 
-        // /assault setarena <base_id> player|npc (op)
         root.then(Commands.literal("setarena")
             .requires(src -> src.hasPermission(2))
             .then(Commands.argument("base_id", StringArgumentType.word())
@@ -64,8 +48,6 @@ public class AssaultCommand {
 
         dispatcher.register(root);
     }
-
-    // ── Handlers ──────────────────────────────────────────────────────────────
 
     private static int enterBase(CommandContext<CommandSourceStack> ctx, String baseId) {
         try {
@@ -136,6 +118,14 @@ public class AssaultCommand {
                 ));
                 return 0;
             }
+
+            // FIX: Si el jugador intenta resetear mientras está adentro peleando, 
+            // abortar la sesión primero para borrar el NPC y liberar la arena.
+            AssaultSession session = AssaultSession.get(player.getUUID());
+            if (session != null && session.getBaseId().equals(baseId)) {
+                AssaultManager.abortSession(player);
+            }
+
             AssaultProgress.resetBase(player.getUUID(), baseId);
             player.sendSystemMessage(Component.literal(
                 AssaultConfig.get().format(AssaultConfig.get().getMsgProgressReset(), "%base%", baseId)
@@ -150,7 +140,7 @@ public class AssaultCommand {
         try {
             AssaultConfig.reload();
             ctx.getSource().sendSuccess(
-                () -> Component.literal("§a[PokeFrontier] Configuración recargada."), false
+                () -> Component.literal("§a[CobbleJefes] Configuración recargada."), false
             );
             return 1;
         } catch (Exception e) {
@@ -183,13 +173,13 @@ public class AssaultCommand {
             if ("player".equals(type)) {
                 base.getArena().setPlayerSpawn(loc);
                 player.sendSystemMessage(Component.literal(
-                    "§a[PokeFrontier] Spawn de jugador guardado para §e" + baseId
+                    "§a[CobbleJefes] Spawn de jugador guardado para §e" + baseId
                     + " §7en §f" + formatLoc(loc)
                 ));
             } else {
                 base.getArena().setNpcSpawn(loc);
                 player.sendSystemMessage(Component.literal(
-                    "§a[PokeFrontier] Spawn de NPC guardado para §e" + baseId
+                    "§a[CobbleJefes] Spawn de NPC guardado para §e" + baseId
                     + " §7en §f" + formatLoc(loc)
                 ));
             }
